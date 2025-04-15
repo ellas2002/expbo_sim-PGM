@@ -1,91 +1,83 @@
+#Ella Stiller
 import numpy as np
-import matplotlib as mpl
+import matplotlib.pyplot as plt
+import random
 
 "global variables BECAUSE they are constant :)"
-max_k = 14 #maximum number of senders
-max_b = 4 #maximum backoff doubling
+sample_size = 1000 #the number trials to run to compute expected values
+max_k = 14
+max_b = 4
 max_w = pow(2, max_b) #maximum backoff window size (== 2^max_b).
-sample_size = 5  #the number trials to run to compute expected values
-counter = 0
 
-xb = 1 #maximum allowed backoff
 
-"define time into discrete slots"
-def time_slots(k):
-    time = [k-1]
-    return time
 
-"trying to figure out how to increase senders for each cycle"
-def senders(k):
-    for i in range(max_k):
-        k = k + 1
-        break
-    return k
+"function for the main part of the simulation"
+def try_time_slot(k):
+    b = [0 for _ in range(k)]
+    rounds = 0
 
-"each station tries to transmit packets at a certain time"
-def packet_send_off(k):
-    sender = senders(k)
-    slot = time_slots(k)
-    for i in range(sender):
-        if slot[i] < sender:
-            return is_collision()
+    while True:
+        slots = []
+
+        for i in range(k):
+            b_i = min(b[i], max_b)
+            time = random.randint(1, pow(2, b_i))
+            slots.append(time)
+
+        if slots.count(1) == 1: #if there is only one sender with 1 "success"
+            #print(f"Success! Round {rounds + 1}")
+            #print(slots)
+            return rounds + 1 #return this for later, but added a round because it is not accounted for
         else:
-            slot.append(slot[i])
-            return "success"
+            for i in range(k):
+                if slots.count(slots[i]) > 1:
+                    b[i] += 1
+
+            rounds += 1
+            #print(slots)
 
 
-"transmission rules: 1 station transmits in a slot --> success"\
-"2+ station transmits in a slot --> collision"
-def is_collision():
-    is_collision.counter += 1 #need to record amount of attempts senders have used
-    exponential_backoff()
-    print("abort transmission")
-    return is_collision.counter
-
-is_collision.counter = 0
-
-#for each time slot
-    #check which time slots are attempting to transmit
-def who_is_it():
-    return
-
-    #count n of simultaneous  transmissions
-def how_many():
-    return
 
 
-def exponential_backoff():
-    attempts = is_collision()
-    for i in range(attempts):
-        if attempts < sample_size:
-            calculation = 1 * pow(2, attempts - 1)
-            seconds = attempts * 2
-            return calculation, seconds
-        else:
-            return print("exceeded amount of attempts allowed")
+"function for going over main simulation for sample_size times"
+def ev_oneOK(k):
+    evs = []
 
+    # loops through main simulation sample size times and then
+    # adds the return (rounds) to the above array for later use
+    for i in range(sample_size):
+        evs.append(try_time_slot(k))
 
-"function tracks the collision rate metric"
-def collision_rate(n, attempts):
-    #collision rate = number of collisions / total transmission attempts
-    return n / attempts
+    m = np.mean(evs)
+    sd = np.std(evs)
+    cv = sd / m
 
-#sucessful transmission per unit
-def throughput():
-    return
+    return cv
 
-#time taken for packet to succeed
-def average_delay():
-    return
-
+"What teacher wants to see plus a bar plot to give some sort of understanding"
+"to what this simulation is doing"
 def run_all_ev():
-    print("max_k = %d, max_b = %d, sample_size = %d" % (max_k, max_b, sample_size))
-    print("k=", k ,"ev_oneOK(k)=", exponential_backoff())
+    print("max_k = %d, max_b = %d, sample_size = %d" % (max_k, max_w, sample_size)) #syntax recommended
+    means = []
+
+    #grabs each mean value
+    #prints out all the different mean values for each k (senders)
+    for k in range(1, max_k + 1):
+        mean = ev_oneOK(k)
+        means.append(mean)
+        print(f"k={k}, ev_oneOK(k)= {mean:.4f}") #syntax recommended
+
+    #matplotlib set up for bar graph
+    plt.bar(range(1, max_k + 1), means)
+    plt.xlabel('number of senders')
+    plt.ylabel('mean of sender collisions')
+    plt.title('Representation?')
+    plt.show()
+
 
 
 def main():
     run_all_ev()
-
 
 if __name__== "__main__":
     main()
