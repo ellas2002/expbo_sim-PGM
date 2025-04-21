@@ -5,33 +5,33 @@ import random
 
 "global variables BECAUSE they are constant :)"
 sample_size = 1000 #the number trials to run to compute expected values
-max_k = 14
-max_b = 4
+max_k = 14 #maximum n of senders
+max_b = 4 #maximum backoff
 max_w = pow(2, max_b) #maximum backoff window size (== 2^max_b).
 
 
 
 "function for the main part of the simulation"
 def try_time_slot(k):
-    b = [0 for _ in range(k)]
-    rounds = 0
+    b = [0 for _ in range(k)] #sets up empty away for keeping track of senders
+    rounds = 0 #keeps tracks of number of times it takes for a success
 
-    while True:
+    while True: #continous loop
         slots = []
 
         for i in range(k):
-            b_i = min(b[i], max_b)
-            time = random.randint(1, pow(2, b_i))
-            slots.append(time)
+            b_i = min(b[i], max_b)  #returns number with the lowest value (making sure it doesn't increment above 4)
+            time = random.randint(1, pow(2, b_i)) #set up the randomization of time slots
+            slots.append(time) #added them to empty array
 
         if slots.count(1) == 1: #if there is only one sender with 1 "success"
             #print(f"Success! Round {rounds + 1}")
             #print(slots)
-            return rounds + 1 #return this for later, but added a round because it is not accounted for
+            return rounds #return this for later
         else:
             for i in range(k):
-                if slots.count(slots[i]) > 1:
-                    b[i] += 1
+                if slots.count(slots[i]) > 1: #if its not a success
+                    b[i] += 1 #increment b up
 
             rounds += 1
             #print(slots)
@@ -45,12 +45,12 @@ def ev_oneOK(k):
 
     # loops through main simulation sample size times and then
     # adds the return (rounds) to the above array for later use
-    for i in range(sample_size):
+    for i in range(sample_size): #only for k = _, not all k
         evs.append(try_time_slot(k))
 
-    m = np.mean(evs)
-    sd = np.std(evs)
-    cv = sd / m
+    m = np.mean(evs) #mean using np
+    sd = np.std(evs) #standard deviation using np
+    cv = sd / m #coefficient of variation using np
 
     return cv
 
@@ -66,7 +66,9 @@ def run_all_ev():
         mean = ev_oneOK(k)
         means.append(mean)
         print(f"k={k}, ev_oneOK(k)= {mean:.4f}") #syntax recommended
+        #m = np.mean(mean)
 
+    #print(m)
     #matplotlib set up for bar graph
     plt.bar(range(1, max_k + 1), means)
     plt.xlabel('number of senders')
